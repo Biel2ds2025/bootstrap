@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sistema de Gerenciamento</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome para ícones -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Chart.js para gráficos -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      padding-top: 56px;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* Navbar com gradiente */
+    .navbar {
+      background: linear-gradient(90deg, #007bff 0%, #0056b3 100%);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    /* Sidebar aprimorado */
+    #sidebar {
+      min-width: 250px;
+      max-width: 250px;
+      background: linear-gradient(180deg, #343a40 0%, #495057 100%);
+      color: #fff;
+      transition: all 0.3s ease;
+      position: fixed;
+      height: calc(100vh - 56px);
+      top: 56px;
+      left: 0;
+      overflow-y: auto;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+      border-radius: 0 10px 10px 0;
+    }
+
+    #sidebar .sidebar-header {
+      padding: 20px;
+      background: #212529;
+      border-radius: 0 10px 0 0;
+    }
+
+    #sidebar ul.components {
+      padding: 10px 0;
+    }
+
+    #sidebar ul li a {
+      padding: 12px 20px;
+      font-size: 1.1em;
+      display: block;
+      color: #adb5bd;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      border-radius: 5px;
+      margin: 5px 10px;
+    }
+
+    #sidebar ul li a:hover {
+      background: #495057;
+      color: #fff;
+      transform: translateX(5px);
+    }
+
+    #sidebar ul li.active > a {
+      background: linear-gradient(90deg, #007bff 0%, #0056b3 100%);
+      color: #fff;
+      box-shadow: 0 2px 4px rgba(0,123,255,0.3);
+    }
+
+    /* Conteúdo principal */
+    #content {
+      margin-left: 250px;
+      padding: 20px;
+      transition: margin-left 0.3s ease;
+    }
+
+    /* Cards com sombras e bordas arredondadas */
+    .card {
+      border: none;
+      border-radius: 15px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    /* Toggle button */
+    #sidebarCollapse {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.2em;
+    }
+
+    /* Responsivo aprimorado */
+    @media (max-width: 768px) {
+      #sidebar {
+        margin-left: -250px;
+        z-index: 1000;
+      }
+      #sidebar.active {
+        margin-left: 0;
+      }
+      #content {
+        margin-left: 0;
+      }
+      #content.active {
+        margin-left: 250px;
+      }
+      /* Overlay para mobile */
+      #sidebar.active::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: -1;
+      }
+    }
+
+    /* Gráfico */
+    .chart-container {
+      position: relative;
+      height: 300px;
+      width: 100%;
+    }
+
+    /* Tabela responsiva */
+    .table-responsive {
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    /* Footer simples */
+    footer {
+      background: #343a40;
+      color: #fff;
+      text-align: center;
+      padding: 10px;
+      margin-top: 20px;
+      border-radius: 10px 10px 0 0;
+    }
+
+    /* Botões personalizados */
+    .btn-custom {
+      border-radius: 25px;
+      padding: 10px 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar Superior -->
+  <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container-fluid">
+      <button type="button" id="sidebarCollapse" class="btn">
+        <i class="fas fa-bars"></i>
+      </button>
+      <a class="navbar-brand fw-bold" href="#"><i class="fas fa-cogs me-2"></i>Sistema Admin</a>
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+            <i class="fas fa-user"></i> Usuário
+          </a>
+          <div class="dropdown-menu dropdown-menu-end">
+            <a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i> Configurações</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt me-2"></i> Sair</a>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Sidebar -->
+  <nav id="sidebar">
+    <div class="sidebar-header">
+      <h4><i class="fas fa-list me-2"></i>Menu Principal</h4>
+    </div>
+    <ul class="list-unstyled components">
+      <li class="active">
+        <a href="#" data-section="dashboard"><i class="fas fa-home me-2"></i> Dashboard</a>
+      </li>
+      <li>
+        <a href="#" data-section="clientes"><i class="fas fa-users me-2"></i> Clientes</a>
+      </li>
+      <li>
+        <a href="#" data-section="produtos"><i class="fas fa-box me-2"></i> Produtos</a>
+      </li>
+      <li>
+        <a href="#" data-section="relatorios"><i class="fas fa-chart-line me-2"></i> Relatórios</a>
+      </li>
+      <li>
+        <a href="#" data-section="configuracoes"><i class="fas fa-cog me-2"></i> Configurações</a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- Conteúdo Principal -->
+  <div id="content">
+    <!-- Conteúdo será carregado dinamicamente aqui -->
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>&copy; 2023 Sistema de Gerenciamento. Todos os direitos reservados.</p>
+  </footer>
+
+  <!-- Modal para Adicionar/Editar Cliente -->
+  <div class="modal fade" id="clienteModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Adicionar/Editar Cliente</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="clienteForm">
+            <div class="mb-3">
+              <label for="clienteNome" class="form-label">Nome</label>
+              <input type="text" class="form-control" id="clienteNome" required>
+            </div>
+            <div class="mb-3">
+              <label for="clienteEmail" class="form-label">Email</label>
+              <input type="email" class="form-control" id="clienteEmail" required>
+            </div>
+            <div class="mb-3">
+              <label for="clienteTelefone" class="form-label">Telefone</label>
+              <input type="text" class="form-control" id="clienteTelefone">
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="salvarCliente">Salvar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para Adicionar/Editar Produto -->
+  <div class="modal fade" id="produtoModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Adicionar/Editar Produto</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="produtoForm">
+            <div class="mb-3">
+              <label for="produtoNome" class="form-label">Nome</label>
+              <input type="text" class="form-control" id="produtoNome" required>
+            </div>
+            <div class="mb-3">
+              <label for="produtoPreco" class="form-label">Preço</label>
+              <input type="number" step="0.01" class="form-control" id="produtoPreco" required>
+            </div>
+            <div class="mb-3">
+              <label for="produtoEstoque" class="form-label">Estoque</label>
+              <input type="number" class="form-control" id="produtoEstoque" required>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="salvarProduto">Salvar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Dados mockados
+      let clientes = [
+        { id: 1, nome: 'João Silva', email: 'joao@email.com', telefone: '1234-5678' },
+        { id: 2, nome: 'Maria Santos', email: 'maria@email.com', telefone: '9876-5432' }
+      ];
+      let produtos = [
+        { id: 1, nome: 'Produto A', preco: 10.00, estoque: 50 },
+        { id: 2, nome: 'Produto B', preco: 20.00, estoque: 30 }
+      ];
+
+      let currentSection = 'dashboard';
+      let editingClienteId = null;
+      let editingProdutoId = null;
+
+      // Função para renderizar conteúdo
+      function renderContent(section) {
+        const content = document.getElementById('content');
+        let html = '';
+
+        if (section === 'dashboard') {
+          html = `
+            <div class="container-fluid">
+              <h2 class="mb-4"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</h2>
+              <p class="lead">Bem-vindo ao sistema de gerenciamento. Use o menu lateral para navegar.</p>
+              
+              <div class="row mb-4">
+                <div class="col-lg-3 col-md-6 mb-3">
+                  <div class="card text-white bg-primary">
+                    <div class="card-body">
+                      <h5 class="card-title"><i class="fas fa-users me-2"></i>Clientes Ativos</h5>
+                      <p class="card-text display-4">${clientes.length}</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                  <div class="card text-white bg-success">
+                    <div class="card-body">
+                      <h5 class="card-title"><i class="fas fa-dollar-sign me-2"></i>Vendas Hoje</h5>
+                      <p class="card-text display-4">R$ 5.230</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                  <div class="card text-white bg-warning">
+                    <div class="card-body">
+                      <h5 class="card-title"><i class="fas fa-clock me-2"></i>Pedidos Pendentes</h5>
+                      <p class="card-text display-4">14</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                  <div class="card text-white bg-info">
+                    <div class="card-body">
+                      <h5 class="card-title"><i class="fas fa-star me-2"></i>Avaliações</h5>
+                      <p class="card-text display-4">4.8</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row mb-4">
+                <div class="col-12">
+                  <div class="card">
+                    <div class="card-header bg-light">
+                      <h5><i class="fas fa-chart-bar me-2"></i>Vendas Mensais</h5>
+                    </div>
+                    <div class="card-body">
+                      <div class="chart-container">
+                        <canvas id="salesChart"></canvas>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-12">
+                  <div class="card">
+                    <div class="card-header bg-light">
+                      <h5><i class="fas fa-history me-2"></i>Atividades Recentes</h5>
+                    </div>
+                    <div class="card-body">
+                      <div class="table-responsive">
+                        <table class="table table-striped">
+                          <thead>
+                            <tr>
+                              <th>Data</th>
+                              <th>Ação</th>
+                              <th>Usuário</th>
+                              <th>Status</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td>2023-10-01</td>
+                              <td>Novo cliente cadastrado</td>
+                              <td>João Silva</td>
+                              <td><span class="badge bg-success">Sucesso</span></td>
+                            </tr>
+                            <tr>
+                              <td>2023-10-01</td>
+                              <td>Pedido processado</td>
+                              <td>Maria Santos</td>
+                              <td><span class="badge bg-primary">Processando</span></td>
+                            </tr>
+                            <tr>
+                              <td>2023-09-30</td>
+                              <td>Relatório gerado</td>
+                              <td>Carlos Oliveira</td>
+                              <td><span class="badge bg-success">Concluído</span></td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        } else if (section === 'clientes') {
+          html = `
+            <div class="container-fluid">
+              <h2 class="mb-4"><i class="fas fa-users me-2"></i>Clientes</h2>
+              <button class="btn btn-primary btn-custom mb-3" data-bs-toggle="modal" data-bs-target="#clienteModal" onclick="limparFormularioCliente()">Adicionar Cliente</button>
+              <div class="card">
+                <div class="card-body">
+                  <div class="table-responsive">
+                    <table class="table table-striped">
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>Nome</th>
+                          <th>Email</th>
+                          <th>Telefone</th>
+                          <th>Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody id="clientesTableBody">
+                        ${clientes.map(c => `
+                          <tr>
+                            <td>${c.id}</td>
+                            <td>${c.nome}</td>
+                            <td>${c.email}</td>
+                            <td>${c.telefone}</td>
+                            <td>
+                              <button class="btn btn-sm btn-warning me-2" onclick="editarCliente(${c.id})">Editar</button>
+                              <button class="btn btn-sm btn-danger" onclick="deletarCliente(${c.id})">Excluir</button>
+                            </td>
+                          </tr>
+                        `).join('')}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        } else if (section === 'produtos') {
+          html = `
+            <div class="container-fluid">
+              <h2 class="mb-4"><i class="fas fa-box me-2"></i>Produtos</h2>
+              <button class="btn btn-primary btn-custom mb-3" data-bs-toggle="modal" data-bs-target="#produtoModal" onclick="limparFormularioProduto()">Adicionar Produto</button>
+              <div class="card">
+                <div class="card-body">
+                  <div class="table-responsive">
+                    <table class="table table-striped">
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>Nome</th>
+                          <th>Preço</th>
+                          <th>Estoque</th>
+                          <th>Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody id="produtosTableBody">
+                        ${produtos.map(p => `
+                          <tr>
+                            <td>${p.id}</td>
+                                                        <td>${p.nome}</td>
+                            <td>R$ ${p.preco.toFixed(2)}</td>
+                            <td>${p.estoque}</td>
+                            <td>
+                              <button class="btn btn-sm btn-warning me-2" onclick="editarProduto(${p.id})">Editar</button>
+                              <button class="btn btn-sm btn-danger" onclick="deletarProduto(${p.id})">Excluir</button>
+                            </td>
+                          </tr>
+                        `).join('')}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        } else if (section === 'relatorios') {
+          html = `
+            <div class="container-fluid">
+              <h2 class="mb-4"><i class="fas fa-chart-line me-2"></i>Relatórios</h2>
+              <div class="row mb-4">
+                <div class="col-md-6">
+                  <div class="card">
+                    <div class="card-header bg-light">
+                      <h5>Relatório de Vendas</h5>
+                    </div>
+                    <div class="card-body">
+                      <p>Gerar relatório de vendas por período.</p>
+                      <button class="btn btn-primary btn-custom">Gerar Relatório</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="card">
+                    <div class="card-header bg-light">
+                      <h5>Relatório de Clientes</h5>
+                    </div>
+                    <div class="card-body">
+                      <p>Gerar relatório de clientes ativos.</p>
+                      <button class="btn btn-primary btn-custom">Gerar Relatório</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-12">
+                  <div class="card">
+                    <div class="card-header bg-light">
+                      <h5>Relatórios Recentes</h5>
+                    </div>
+                    <div class="card-body">
+                      <div class="table-responsive">
+                        <table class="table table-striped">
+                          <thead>
+                            <tr>
+                              <th>Data</th>
+                              <th>Tipo</th>
+                              <th>Status</th>
+                              <th>Ações</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td>2023-10-01</td>
+                              <td>Vendas</td>
+                              <td><span class="badge bg-success">Gerado</span></td>
+                              <td><button class="btn btn-sm btn-primary">Download</button></td>
+                            </tr>
+                            <tr>
+                              <td>2023-09-30</td>
+                              <td>Clientes</td>
+                              <td><span class="badge bg-success">Gerado</span></td>
+                              <td><button class="btn btn-sm btn-primary">Download</button></td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        } else if (section === 'configuracoes') {
+          html = `
+            <div class="container-fluid">
+              <h2 class="mb-4"><i class="fas fa-cog me-2"></i>Configurações</h2>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="card">
+                    <div class="card-header bg-light">
+                      <h5>Perfil do Usuário</h5>
+                    </div>
+                    <div class="card-body">
+                      <form>
+                        <div class="mb-3">
+                          <label for="userName" class="form-label">Nome</label>
+                          <input type="text" class="form-control" id="userName" value="Admin">
+                        </div>
+                        <div class="mb-3">
+                          <label for="userEmail" class="form-label">Email</label>
+                          <input type="email" class="form-control" id="userEmail" value="admin@email.com">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-custom">Salvar</button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="card">
+                    <div class="card-header bg-light">
+                      <h5>Configurações do Sistema</h5>
+                    </div>
+                    <div class="card-body">
+                      <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="notificacoes">
+                        <label class="form-check-label" for="notificacoes">
+                          Ativar notificações
+                        </label>
+                      </div>
+                      <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="backup">
+                        <label class="form-check-label" for="backup">
+                          Backup automático
+                        </label>
+                      </div>
+                      <button class="btn btn-primary btn-custom">Salvar Configurações</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        content.innerHTML = html;
+
+        // Renderizar gráfico se for dashboard
+        if (section === 'dashboard') {
+          setTimeout(() => {
+            const ctx = document.getElementById('salesChart');
+            if (ctx) {
+              new Chart(ctx, {
+                type: 'line',
+                data: {
+                  labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+                  datasets: [{
+                    label: 'Vendas (R$)',
+                    data: [12000, 15000, 18000, 22000, 25000, 28000, 30000, 32000, 29000, 31000, 33000, 35000],
+                    borderColor: '#007bff',
+                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                    tension: 0.4
+                  }]
+                },
+                options: {
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  scales: {
+                    y: {
+                      beginAtZero: true
+                    }
+                  }
+                }
+              });
+            }
+          }, 100);
+        }
+      }
+
+      // Navegação do menu
+      document.querySelectorAll('#sidebar a[data-section]').forEach(link => {
+        link.addEventListener('click', function(e) {
+          e.preventDefault();
+          const section = this.getAttribute('data-section');
+          document.querySelectorAll('#sidebar li').forEach(li => li.classList.remove('active'));
+          this.parentElement.classList.add('active');
+          currentSection = section;
+          renderContent(section);
+        });
+      });
+
+      // Toggle sidebar
+      document.getElementById('sidebarCollapse').addEventListener('click', function () {
+        document.getElementById('sidebar').classList.toggle('active');
+        document.getElementById('content').classList.toggle('active');
+      });
+
+      // Funções para clientes
+      window.limparFormularioCliente = function() {
+        editingClienteId = null;
+        document.getElementById('clienteNome').value = '';
+        document.getElementById('clienteEmail').value = '';
+        document.getElementById('clienteTelefone').value = '';
+      };
+
+      window.editarCliente = function(id) {
+        const cliente = clientes.find(c => c.id === id);
+        if (cliente) {
+          editingClienteId = id;
+          document.getElementById('clienteNome').value = cliente.nome;
+          document.getElementById('clienteEmail').value = cliente.email;
+          document.getElementById('clienteTelefone').value = cliente.telefone;
+          new bootstrap.Modal(document.getElementById('clienteModal')).show();
+        }
+      };
+
+      window.deletarCliente = function(id) {
+        if (confirm('Tem certeza que deseja excluir este cliente?')) {
+          clientes = clientes.filter(c => c.id !== id);
+          renderContent('clientes');
+        }
+      };
+
+      document.getElementById('salvarCliente').addEventListener('click', function() {
+        const nome = document.getElementById('clienteNome').value;
+        const email = document.getElementById('clienteEmail').value;
+        const telefone = document.getElementById('clienteTelefone').value;
+
+        if (editingClienteId) {
+          const cliente = clientes.find(c => c.id === editingClienteId);
+          if (cliente) {
+            cliente.nome = nome;
+            cliente.email = email;
+            cliente.telefone = telefone;
+          }
+        } else {
+          const newId = Math.max(...clientes.map(c => c.id)) + 1;
+          clientes.push({ id: newId, nome, email, telefone });
+        }
+
+        bootstrap.Modal.getInstance(document.getElementById('clienteModal')).hide();
+        renderContent('clientes');
+      });
+
+      // Funções para produtos
+      window.limparFormularioProduto = function() {
+        editingProdutoId = null;
+        document.getElementById('produtoNome').value = '';
+        document.getElementById('produtoPreco').value = '';
+        document.getElementById('produtoEstoque').value = '';
+      };
+
+      window.editarProduto = function(id) {
+        const produto = produtos.find(p => p.id === id);
+        if (produto) {
+          editingProdutoId = id;
+          document.getElementById('produtoNome').value = produto.nome;
+          document.getElementById('produtoPreco').value = produto.preco;
+          document.getElementById('produtoEstoque').value = produto.estoque;
+          new bootstrap.Modal(document.getElementById('produtoModal')).show();
+        }
+      };
+
+      window.deletarProduto = function(id) {
+        if (confirm('Tem certeza que deseja excluir este produto?')) {
+          produtos = produtos.filter(p => p.id !== id);
+          renderContent('produtos');
+        }
+      };
+
+      document.getElementById('salvarProduto').addEventListener('click', function() {
+        const nome = document.getElementById('produtoNome').value;
+        const preco = parseFloat(document.getElementById('produtoPreco').value);
+        const estoque = parseInt(document.getElementById('produtoEstoque').value);
+
+        if (editingProdutoId) {
+          const produto = produtos.find(p => p.id === editingProdutoId);
+          if (produto) {
+            produto.nome = nome;
+            produto.preco = preco;
+            produto.estoque = estoque;
+          }
+        } else {
+          const newId = Math.max(...produtos.map(p => p.id)) + 1;
+          produtos.push({ id: newId, nome, preco, estoque });
+        }
+
+        bootstrap.Modal.getInstance(document.getElementById('produtoModal')).hide();
+        renderContent('produtos');
+      });
+
+      // Renderizar dashboard inicial
+      renderContent('dashboard');
+    });
+  </script>
+</body>
+</html>
